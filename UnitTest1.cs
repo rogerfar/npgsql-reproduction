@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace npgsql_reproduction;
@@ -13,6 +14,7 @@ public class UnitTest1 : IAsyncLifetime
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseNpgsql(ConnectionString)
             .EnableSensitiveDataLogging()
+            .LogTo(Console.WriteLine, LogLevel.Information)
             .Options;
 
         _dbContext = new AppDbContext(options);
@@ -28,6 +30,14 @@ public class UnitTest1 : IAsyncLifetime
     public async Task Test1(Int32 userId)
     {
         var result = await _dbContext.Users.FirstOrDefaultAsync(m => m.Id == userId);
+
+        Assert.NotNull(result);
+    }
+
+    [Fact]
+    public async Task Test2()
+    {
+        var result = await _dbContext.Users.Where(m => m.MetaData != null && m.MetaData.Access.Any()).ToListAsync();
 
         Assert.NotNull(result);
     }
